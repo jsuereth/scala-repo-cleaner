@@ -1,0 +1,15 @@
+#!/bin/bash
+
+jars=$(find . -name "*.jar")
+
+pushscript=$(dirname $0)/push-binary-libs.sh
+
+if [[ "$jars" != "" ]]; then
+  #echo "Pushing Jar files to remote repo"
+  $pushscript user password >/dev/null
+  #echo "Removing Jar files."
+  for jar in $jar; do
+    rm $jar
+  done
+  # The generated "desired.sha1" files should automatically be added back to the tree....
+fi
