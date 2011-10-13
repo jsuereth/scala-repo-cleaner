@@ -1,7 +1,12 @@
 #!/bin/bash
 
-jars=$(find . -name "*.jar")
+# Run end-line fix
+find . -type f -a \( -name '*.scala' -o -name '*.java' -o -name '*.css' -o -name '*.sh' -o -name '*.txt' \) | xargs fromdos
 
+
+# Run jar removal fix
+
+jars=$(find . -name "*.jar")
 pushscript=$(dirname $0)/push-binary-libs.sh
 
 if [[ "$jars" != "" ]]; then
