@@ -63,3 +63,4 @@ lavanchy = lavanchy <lavanchy@epfl.ch>
 copponne = copponne <copponne@epfl.ch>
 manojo = manojo <manojo@epfl.ch>
 hosekp = hosekp <hosekp@epfl.ch>
+Mirco = Micro Dotta <mirco.dotta@gmail.com>
