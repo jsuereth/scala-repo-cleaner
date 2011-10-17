@@ -1,13 +1,24 @@
 #!/bin/bash
 
+modfiles=$(git diff-tree -r --name-status $GIT_COMMIT | awk '$1 != "R" { print $2 }')
 
-#modfiles=$(git diff --cached --name-status | awk '$1 != "R" { print $2 }')
-modfiles=$(git ls-files -m)
+printInfo() {
+  echo ""
+  echo "Arguments $@"
+  echo "GIT_DIR = $GIT_DIR"
+  echo "GIT_WORK_TREE = $GIT_WORK_TREE"
+  echo "GIT_INDEX_TREE = $GIT_INDEX_FILE"
+  echo "GIT_COMMIT = $GIT_COMMIT"
+  echo "Changes"
+  echo "-----------"
+  echo "$modfiles"
+  echo "-----------"
+}
 
 fixWhitespace() {
   local file=$1
-  #echo "Fixing whitespace for "$(pwd)/$1"
-  echo ""
+  #echo "Fixing whitespace for $(pwd)/$1"
+  #echo ""
   fromdos $file
   cat $file | sed 's/[ \t]*$//' > $file
 }
@@ -20,9 +31,9 @@ for file in $modfiles; do
   ext=${file#*.}
   if [[ "$ext" == "jar" ]]; then
     pushjarfiles=true
-  elif [[ "$ext" == "scala" ]]; then
+  elif [[ "$ext" == "scala" ]] || [[ "$ext" == "java" ]]; then
     # TODO - fix whitespace and such
-    fixWhitespace $file
+    fixWhitespace $GIT_WORK_TREE/$file
   fi
 done
 
@@ -36,7 +47,7 @@ if test $pushjarfiles; then
   for file in $modfiles; do
     ext=${file#*.}
     if [[ "$ext" == "jar" ]]; then
-      rm $file
+      rm $GIT_WORK_TREE/$file
     fi
   done
   # The generated "desired.sha1" files should automatically be added back to the tree....
