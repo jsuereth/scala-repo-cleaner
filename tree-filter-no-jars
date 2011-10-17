@@ -1,25 +1,43 @@
 #!/bin/bash
 
 
-# Run end-line fix
-find . -type f -a \( -name '*.scala' -o -name '*.java' -o -name '*.css' -o -name '*.sh' -o -name '*.txt' \) | xargs fromdos
+#modfiles=$(git diff --cached --name-status | awk '$1 != "R" { print $2 }')
+modfiles=$(git ls-files -m)
 
-# Remove trailing whitespace
-for file in $(find . -type f -a \( -name '*.scala' -o -name '*.java' -o -name '*.css' -o -name '*.sh' -o -name '*.txt' \)); do
+fixWhitespace() {
+  local file=$1
+  #echo "Fixing whitespace for "$(pwd)/$1"
+  echo ""
+  fromdos $file
   cat $file | sed 's/[ \t]*$//' > $file
+}
+
+
+pushjarfiles=""
+
+#Modify the modified files...
+for file in $modfiles; do
+  ext=${file#*.}
+  if [[ "$ext" == "jar" ]]; then
+    pushjarfiles=true
+  elif [[ "$ext" == "scala" ]]; then
+    # TODO - fix whitespace and such
+    fixWhitespace $file
+  fi
 done
 
 # Run jar removal fix
-
-jars=$(find . -name "*.jar")
-pushscript=$(dirname $0)/push-binary-libs.sh
-
-if [[ "$jars" != "" ]]; then
-  #echo "Pushing Jar files to remote repo"
+if test $pushjarfiles; then
+  jars=$(find . -name "*.jar")
+  pushscript=$(dirname $0)/push-binary-libs.sh
+  # Push new jar files.
   $pushscript user password >/dev/null
   #echo "Removing Jar files."
-  for jar in $jar; do
-    rm $jar
+  for file in $modfiles; do
+    ext=${file#*.}
+    if [[ "$ext" == "jar" ]]; then
+      rm $file
+    fi
   done
   # The generated "desired.sha1" files should automatically be added back to the tree....
 fi
