@@ -28,12 +28,14 @@ pushjarfiles=""
 
 #Modify the modified files...
 for file in $modfiles; do
-  ext=${file#*.}
-  if [[ "$ext" == "jar" ]]; then
-    pushjarfiles=true
-  elif [[ "$ext" == "scala" ]] || [[ "$ext" == "java" ]]; then
-    # TODO - fix whitespace and such
-    fixWhitespace $GIT_WORK_TREE/$file
+  if test -f $file; then
+    ext=${file#*.}
+    if [[ "$ext" == "jar" ]]; then
+      pushjarfiles=true
+    elif [[ "$ext" == "scala" ]] || [[ "$ext" == "java" ]]; then
+      # TODO - fix whitespace and such
+      fixWhitespace $GIT_WORK_TREE/$file
+    fi
   fi
 done
 
@@ -46,7 +48,7 @@ if test $pushjarfiles; then
   #echo "Removing Jar files."
   for file in $modfiles; do
     ext=${file#*.}
-    if [[ "$ext" == "jar" ]]; then
+    if test "$ext" == "jar" && test -f $file; then
       rm $GIT_WORK_TREE/$file
     fi
   done
