@@ -9,11 +9,19 @@ curdir=$(pwd)
 #$git2svn $repourl --authors $authorfile --trunk trunk --tags tags --branches branches 
 git svn clone -s $repourl --authors-file=$authorfile scala-svn --no-metadata
 
-# Next clone the repo so that the SVN junk is dropped.
-git clone scala-svn scala-git
 
+pushd $curdir/scala-svn
 
-pushd $curdir/scala-git
+# Now check out all remote branches so we have local copies.
+git fetch . refs/remotes/*:refs/heads/*
+# Remove rmeote branches
+git branch -rd $(git branch -r | xargs)
+# Remove trunk since master is a duplicate
+git branch -D trunk
+
+# Remove SVN stuff
+git config --remove-section svn-remote.svn
+rm -Rf .git/svn/
 
 # Next filter the branches to remove binary artifacts.
 #$curdir/filter-branch.sh
@@ -21,5 +29,9 @@ pushd $curdir/scala-git
 #$curdir/clean-filtered-branch.sh
 
 popd
+
+
+# Now clone the repository somewhere else so we can push the cloned version to github.
+
 
 
