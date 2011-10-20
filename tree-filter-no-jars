@@ -1,6 +1,10 @@
 #!/bin/bash
 
-modfiles=$(git diff-tree -r --name-status $GIT_COMMIT | awk '$1 != "R" { print $2 }')
+. $(dirname $0)/binary-repo-lib.sh
+
+modfiles=$(git diff-tree -r --name-status $GIT_COMMIT | awk '$1 != "D" { print $2 }')
+user=user
+password=password
 
 printInfo() {
   echo ""
@@ -23,34 +27,22 @@ fixWhitespace() {
   cat $file | sed 's/[ \t]*$//' > $file
 }
 
-
-pushjarfiles=""
-
 #Modify the modified files...
 for file in $modfiles; do
   if test -f $file; then
     ext=${file#*.}
     if [[ "$ext" == "jar" ]]; then
-      pushjarfiles=true
+      echo ""
+      p=$GIT_WORK_TREE #$(pwd)
+      pushJarFile "$p/$file" "$p" "$user" "$password"
+      echo "Removing $file from $GIT_COMMIT..."
+      echo ""
+      rm -f $file
     elif [[ "$ext" == "scala" ]] || [[ "$ext" == "java" ]]; then
-      # TODO - fix whitespace and such
+      #fix whitespace and such
       fixWhitespace $GIT_WORK_TREE/$file
     fi
   fi
 done
 
-# Run jar removal fix
-if test $pushjarfiles; then
-  jars=$(find . -name "*.jar")
-  pushscript=$(dirname $0)/push-binary-libs.sh
-  # Push new jar files.
-  $pushscript user password >/dev/null
-  #echo "Removing Jar files."
-  for file in $modfiles; do
-    ext=${file#*.}
-    if test "$ext" == "jar" && test -f $file; then
-      rm $GIT_WORK_TREE/$file
-    fi
-  done
-  # The generated "desired.sha1" files should automatically be added back to the tree....
-fi
+exit 0
