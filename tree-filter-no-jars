@@ -27,7 +27,7 @@ fixWhitespace() {
 }
 
 # Fix whitespace in source
-sourcefiles=$(find . -name "*.scala")
+sourcefiles="$(find . -name '*.scala') $(find . -name '*.java')"
 for file in $sourcefiles; do
   if test -f $file; then
     #fix whitespace and such
@@ -36,7 +36,7 @@ for file in $sourcefiles; do
 done
 
 # Remove jar files
-jarfiles=$(find lib -name "*.jar")
+jarfiles=$(find . -name "*.jar")
 for file in $jarfiles; do
   if test -f $file; then
     p=$(pwd)
