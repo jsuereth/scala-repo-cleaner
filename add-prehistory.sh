@@ -18,7 +18,7 @@ git commit -a -m "Binary file utilities"
 monkeypatch=$(git log | grep "commit" | awk '{ print $2 }')
 
 # Add grafts to the grafts file.
-firstcommit=$(git log --reverse | head -n 1 | awk '{ print $2 }')
+firstcommit=$(git log --reverse master | head -n 1 | awk '{ print $2 }')
 
 # Create a graft for this commit...
 echo "$firstcommit $monkeypatch" >> .git/info/grafts
