@@ -36,7 +36,7 @@ for file in $sourcefiles; do
 done
 
 # Remove jar files
-jarfiles=$(find lib -name "*.jar"
+jarfiles=$(find lib -name "*.jar")
 for file in $jarfiles; do
   if test -f $file; then
     p=$(pwd)
