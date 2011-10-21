@@ -2,7 +2,8 @@
 
 . $(dirname $0)/binary-repo-lib.sh
 
-modfiles=$(git diff-tree -r --name-status $GIT_COMMIT | awk '$1 != "D" { print $2 }')
+#modfiles=$(git diff-tree -r --name-status $GIT_COMMIT | awk '$1 != "D" { print $2 }')
+modfiles=$(find . -name "*.jar")
 user=user
 password=password
 
@@ -21,28 +22,31 @@ printInfo() {
 
 fixWhitespace() {
   local file=$1
-  #echo "Fixing whitespace for $(pwd)/$1"
-  #echo ""
   fromdos $file
   cat $file | sed 's/[ \t]*$//' > $file
 }
 
-#Modify the modified files...
-for file in $modfiles; do
+# Fix whitespace in source
+sourcefiles=$(find . -name "*.scala")
+for file in $sourcefiles; do
   if test -f $file; then
-    ext=${file#*.}
-    if [[ "$ext" == "jar" ]]; then
-      echo ""
-      p=$GIT_WORK_TREE #$(pwd)
-      pushJarFile "$p/$file" "$p" "$user" "$password"
-      echo "Removing $file from $GIT_COMMIT..."
-      echo ""
-      rm -f $file
-    elif [[ "$ext" == "scala" ]] || [[ "$ext" == "java" ]]; then
-      #fix whitespace and such
-      fixWhitespace $GIT_WORK_TREE/$file
-    fi
+    #fix whitespace and such
+    fixWhitespace "$(pwd)/$file"
   fi
 done
 
+# Remove jar files
+jarfiles=$(find lib -name "*.jar"
+for file in $jarfiles; do
+  if test -f $file; then
+    p=$(pwd)
+    pushJarFile "$p/$file" "$p" "$user" "$password"
+    rm -f $file
+  fi
+done
+
+# Copy utility scripts into EVERY COMMIT.  This way, there' always available for recovering JAR Files.
+#cp -R $(dirname $0)/first-commit/* .
+
 exit 0
+
