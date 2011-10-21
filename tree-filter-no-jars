@@ -46,7 +46,7 @@ for file in $jarfiles; do
 done
 
 # Copy utility scripts into EVERY COMMIT.  This way, there' always available for recovering JAR Files.
-#cp -R $(dirname $0)/first-commit/* .
+cp -R $(dirname $0)/first-commit/* .
 
 exit 0
 
