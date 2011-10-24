@@ -3,7 +3,7 @@
 # Library to push and pull binary artifacts from a remote repository using CURL.
 
 
-remote_urlbase="http://typesafe.artifactoryonline.com/typesafe/starr-releases/org/scala-lang/bootstrap"
+remote_urlbase="https://repo.typesafe.com/typesafe/scala-sha-bootstrap/org/scala-lang/bootstrap"
 libraryJar="$(pwd)/lib/scala-library.jar"
 desired_ext=".desired.sha1"
 
@@ -32,7 +32,7 @@ curlUpload() {
   local user=$3
   local password=$4
   local url="${remote_urlbase}/${remote_location}"
-  http_code=$(curl --data-binary "@${data}" --digest --user "${user}:${password}" "$url")
+  http_code=$(curl -k --request PUT --user "${user}:${password}" --data "@${file}" $url)
   if (( $? != 0 )); then
     echo "Error uploading $data to $url: response code $http_code"
     echo "$url"
