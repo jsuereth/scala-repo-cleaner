@@ -22,8 +22,8 @@ printInfo() {
 
 fixWhitespace() {
   local file=$1
-  fromdos $file
-  cat $file | sed 's/[ \t]*$//' > $file
+  sed -i "" '/[   
+]*$/ s///' "$file"
 }
 
 # Fix whitespace in source
