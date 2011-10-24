@@ -3,7 +3,7 @@
 . $(dirname $0)/binary-repo-lib.sh
 
 #modfiles=$(git diff-tree -r --name-status $GIT_COMMIT | awk '$1 != "D" { print $2 }')
-modfiles=$(find . -name "*.jar")
+modfiles=$(git ls-files | grep '\.jar$')
 user=user
 password=password
 
@@ -20,23 +20,14 @@ printInfo() {
   echo "-----------"
 }
 
-fixWhitespace() {
-  local file=$1
-  fromdos $file
-  cat $file | sed 's/[ \t]*$//' > $file
-}
-
 # Fix whitespace in source
-sourcefiles="$(find . -name '*.scala') $(find . -name '*.java')"
-for file in $sourcefiles; do
-  if test -f $file; then
-    #fix whitespace and such
-    fixWhitespace "$(pwd)/$file"
-  fi
+for file in $(git ls-files src sources | egrep '\.(java|scala)$'); do
+  sed -i "" '/[ 	
+]*$/ s///' "$file"
 done
 
 # Remove jar files
-jarfiles=$(find . -name "*.jar")
+jarfiles=$(git ls-files | grep '\.jar$')
 for file in $jarfiles; do
   if test -f $file; then
     p=$(pwd)

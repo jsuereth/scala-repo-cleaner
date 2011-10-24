@@ -69,16 +69,18 @@ pushJarFile() {
   local pw=$4
   local jar_dir=$(dirname $jar)
   local jar_name=${jar#$jar_dir/}
-  pushd $jar_dir >/dev/null
-  local jar_sha1=$(shasum $jar_name)
-  local version=${jar_sha1%  $jar_name}
-  local remote_uri=${version}${jar#$basedir}
-  echo "  Pushing to ${remote_urlbase}/${remote_uri} ..."
-  echo "	$curl"
-  local curl=$(curlUpload $remote_uri $jar_name $user $pw)
-  echo "  Making new sha1 file ...."
-  echo "$jar_sha1" > "${jar_name}${desired_ext}"
-  echo "  Deleting ${jar} from repo for commit."
+  ( cd $jar_dir && {
+      local jar_sha1=$(shasum $jar_name)
+      local version=${jar_sha1%  $jar_name}
+      local remote_uri=${version}${jar#$basedir}
+      echo "  Pushing to ${remote_urlbase}/${remote_uri} ..."
+      echo "	$curl"
+      local curl=$(curlUpload $remote_uri $jar_name $user $pw)
+      echo "  Making new sha1 file ...."
+      echo "$jar_sha1" > "${jar_name}${desired_ext}"
+      echo "  Deleting ${jar} from repo for commit."
+    }
+  )
   popd >/dev/null
   # TODO - Git remove jar and git add jar.desired.sha1
   # rm $jar
@@ -94,10 +96,11 @@ isJarFileValid() {
   else
     local jar_dir=$(dirname $jar)
     local jar_name=${jar#$jar_dir/}
-    pushd $jar_dir >/dev/null
-    local valid=$(shasum --check ${jar_name}${desired_ext} 2>/dev/null)
-    echo "${valid#$jar_name: }"
-    popd >/dev/null
+    ( cd "$jar_dir" && {
+        local valid=$(shasum --check ${jar_name}${desired_ext} 2>/dev/null)
+        echo "${valid#$jar_name: }"
+      }
+    )
   fi
 }
 
