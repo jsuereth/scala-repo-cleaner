@@ -23,6 +23,15 @@ git branch -D trunk
 git config --remove-section svn-remote.svn
 rm -Rf .git/svn/
 
+# Convert tag branches into git tags.
+git for-each-ref --format='%(refname)' refs/heads/tags |
+cut -d / -f 4 |
+while read ref
+do
+  git tag "$ref" "refs/heads/tags/$ref";
+  git branch -D "tags/$ref";
+done
+
 # Next filter the branches to remove binary artifacts.
 #$curdir/filter-branch.sh
 # Now clean up unreferenced commits.
