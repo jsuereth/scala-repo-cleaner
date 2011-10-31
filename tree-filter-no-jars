@@ -21,9 +21,8 @@ printInfo() {
 }
 
 fixWhitespace() {
-  local file=$1
-  sed -i "" '/[ 	
-]*$/ s///' "$file"
+  # TODO - on Mac use 'gsed'.
+  sed -i 's/[ \t\r]*$//' "$1"
 }
 
 # Fix whitespace in source
