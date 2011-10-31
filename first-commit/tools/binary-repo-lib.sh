@@ -3,6 +3,7 @@
 # Library to push and pull binary artifacts from a remote repository using CURL.
 
 
+# Note: Using HTTPs causes issue due to bad SSL certificate on repo.typesafe.com server.
 remote_urlbase="https://repo.typesafe.com/typesafe/scala-sha-bootstrap/org/scala-lang/bootstrap"
 libraryJar="$(pwd)/lib/scala-library.jar"
 desired_ext=".desired.sha1"
