@@ -3,8 +3,7 @@
 # Library to push and pull binary artifacts from a remote repository using CURL.
 
 
-# Note: Using HTTPs causes issue due to bad SSL certificate on repo.typesafe.com server.
-remote_urlbase="https://repo.typesafe.com/typesafe/scala-sha-bootstrap/org/scala-lang/bootstrap"
+remote_urlbase="http://typesafe.artifactoryonline.com/typesafe/scala-sha-bootstrap/org/scala-lang/bootstrap"
 libraryJar="$(pwd)/lib/scala-library.jar"
 desired_ext=".desired.sha1"
 
@@ -77,7 +76,6 @@ pushJarFile() {
   local curl=$(curlUpload $remote_uri $jar_name $user $pw)
   echo "  Making new sha1 file ...."
   echo "$jar_sha1" > "${jar_name}${desired_ext}"
-  echo "  Deleting ${jar} from repo for commit."
   popd >/dev/null
   # TODO - Git remove jar and git add jar.desired.sha1
   # rm $jar
