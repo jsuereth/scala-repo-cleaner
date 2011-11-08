@@ -3,8 +3,7 @@
 # Library to push and pull binary artifacts from a remote repository using CURL.
 
 
-# Note: Using HTTPs causes issue due to bad SSL certificate on repo.typesafe.com server.
-remote_urlbase="https://repo.typesafe.com/typesafe/scala-sha-bootstrap/org/scala-lang/bootstrap"
+remote_urlbase="http://typesafe.artifactoryonline.com/typesafe/scala-sha-bootstrap/org/scala-lang/bootstrap"
 libraryJar="$(pwd)/lib/scala-library.jar"
 desired_ext=".desired.sha1"
 
@@ -69,15 +68,14 @@ pushJarFile() {
   local jar_dir=$(dirname $jar)
   local jar_name=${jar#$jar_dir/}
   pushd $jar_dir >/dev/null
-  local jar_sha1=$(shasum $jar_name)
-  local version=${jar_sha1%  $jar_name}
+  local jar_sha1=$(shasum -p $jar_name)
+  local version=${jar_sha1% ?$jar_name}
   local remote_uri=${version}${jar#$basedir}
   echo "  Pushing to ${remote_urlbase}/${remote_uri} ..."
   echo "	$curl"
   local curl=$(curlUpload $remote_uri $jar_name $user $pw)
   echo "  Making new sha1 file ...."
   echo "$jar_sha1" > "${jar_name}${desired_ext}"
-  echo "  Deleting ${jar} from repo for commit."
   popd >/dev/null
   # TODO - Git remove jar and git add jar.desired.sha1
   # rm $jar
@@ -94,7 +92,7 @@ isJarFileValid() {
     local jar_dir=$(dirname $jar)
     local jar_name=${jar#$jar_dir/}
     pushd $jar_dir >/dev/null
-    local valid=$(shasum --check ${jar_name}${desired_ext} 2>/dev/null)
+    local valid=$(shasum -p --check ${jar_name}${desired_ext} 2>/dev/null)
     echo "${valid#$jar_name: }"
     popd >/dev/null
   fi
@@ -129,9 +127,9 @@ pullJarFile() {
   local sha1=$(cat ${jar}${desired_ext})
   local jar_dir=$(dirname $jar)
   local jar_name=${jar#$jar_dir/}
-  local version=${sha1%  $jar_name}
+  local version=${sha1% ?$jar_name}
   local remote_uri=${version}/${jar#$basedir/}
-  echo "Downloading from ${remote_urlbase}/${remote_uri}"
+  echo "Downloading from ${remote_urlbase}/${remote_uri} to $jar"
   curlDownload $jar ${remote_urlbase}/${remote_uri}
 }
 
