@@ -6,6 +6,7 @@
 remote_urlbase="http://typesafe.artifactoryonline.com/typesafe/scala-sha-bootstrap/org/scala-lang/bootstrap"
 libraryJar="$(pwd)/lib/scala-library.jar"
 desired_ext=".desired.sha1"
+push_jar="$(pwd)/tools/push.jar"
 
 # Checks whether or not curl is installed and issues a warning on failure.
 checkCurl() {
@@ -32,9 +33,9 @@ curlUpload() {
   local user=$3
   local password=$4
   local url="${remote_urlbase}/${remote_location}"
-  http_code=$(curl -k --request PUT --user "${user}:${password}" --data "@${file}" $url)
+  java -jar $push_jar "$data" "$remote_location" "$user" "$password"
   if (( $? != 0 )); then
-    echo "Error uploading $data to $url: response code $http_code"
+    echo "Error uploading $data to $url"
     echo "$url"
     exit 1
   fi
@@ -129,7 +130,7 @@ pullJarFile() {
   local jar_name=${jar#$jar_dir/}
   local version=${sha1% ?$jar_name}
   local remote_uri=${version}/${jar#$basedir/}
-  echo "Downloading from ${remote_urlbase}/${remote_uri} to $jar"
+  echo "Downloading from ${remote_urlbase}/${remote_uri}"
   curlDownload $jar ${remote_urlbase}/${remote_uri}
 }
 
