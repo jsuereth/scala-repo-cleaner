@@ -31,8 +31,8 @@ curlUpload() {
   local data=$2
   local user=$3
   local password=$4
-  mkdir -p $(dirname /tmp/bin-repo/$remote_location)
-  cp $data /tmp/bin-repo/$remote_location
+  mkdir -p $(dirname ~/tmp/bin-repo/$remote_location)
+  cp $data ~/tmp/bin-repo/$remote_location
 #  local url="${remote_urlbase}/${remote_location}"
 #  http_code=$(curl --data-binary "@${data}" --digest --user "${user}:${password}" "$url")
 #  if (( $? != 0 )); then
@@ -70,8 +70,8 @@ pushJarFile() {
   local jar_dir=$(dirname $jar)
   local jar_name=${jar#$jar_dir/}
   pushd $jar_dir >/dev/null
-  local jar_sha1=$(shasum $jar_name)
-  local version=${jar_sha1%  $jar_name}
+  local jar_sha1=$(shasum -p $jar_name)
+  local version=${jar_sha1%  ?$jar_name}
   local remote_uri=${version}${jar#$basedir}
   echo "  Pushing to ${remote_urlbase}/${remote_uri} ..."
   echo "	$curl"
@@ -95,7 +95,7 @@ isJarFileValid() {
     local jar_dir=$(dirname $jar)
     local jar_name=${jar#$jar_dir/}
     pushd $jar_dir >/dev/null
-    local valid=$(shasum --check ${jar_name}${desired_ext} 2>/dev/null)
+    local valid=$(shasum -p --check ${jar_name}${desired_ext} 2>/dev/null)
     echo "${valid#$jar_name: }"
     popd >/dev/null
   fi
