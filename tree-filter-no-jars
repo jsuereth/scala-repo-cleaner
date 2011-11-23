@@ -3,7 +3,6 @@
 . $(dirname $0)/binary-repo-lib.sh
 
 #modfiles=$(git diff-tree -r --name-status $GIT_COMMIT | awk '$1 != "D" { print $2 }')
-modfiles=$(find . -name "*.jar")
 user=user
 password=password
 
@@ -25,27 +24,48 @@ fixWhitespace() {
   sed -i 's/[ \t\r]*$//' "$1"
 }
 
-# Fix whitespace in source
-sourcefiles="$(find . -name '*.scala') $(find . -name '*.java')"
-for file in $sourcefiles; do
-  if test -f $file; then
-    #fix whitespace and such
-    fixWhitespace "$(pwd)/$file"
+fixWhitespaceFiles() {
+  # Fix whitespace in source
+  if test -d src; then
+    sourcefiles="$(find src -name '*.scala') $(find src -name '*.java')"
+    for file in $sourcefiles; do
+      if test -f $file; then
+        #fix whitespace and such
+        fixWhitespace "$(pwd)/$file"
+      fi
+    done
   fi
-done
+}
 
-# Remove jar files
-jarfiles=$(find . -name "*.jar")
-for file in $jarfiles; do
-  if test -f $file; then
-    p=$(pwd)
-    pushJarFile "$p/$file" "$p" "$user" "$password"
-    rm -f $file
+removeJarFiles() {
+  # Remove jar files
+  jarfiles=$(find . -name "*.jar")
+  for file in $jarfiles; do
+    if test -f $file; then
+      p=$(pwd)
+      pushJarFile "$p/$file" "$p" "$user" "$password"
+      rm -f $file
+    fi
+  done
+}
+
+copyFirstCommit() {
+  # Copy utility scripts into EVERY COMMIT.  This way, there' always available for recovering JAR Files.
+  cp -R $(dirname $0)/first-commit/* .
+  cp $(dirname $0)/first-commit/.gitignore .gitignore
+}
+
+removeShootoutTests() {
+  if [[ -f build.xml ]]; then
+    sed '/<shootouttests.*/d' -i build.xml
   fi
-done
+}
 
-# Copy utility scripts into EVERY COMMIT.  This way, there' always available for recovering JAR Files.
-cp -R $(dirname $0)/first-commit/* .
+
+fixWhitespaceFiles
+removeJarFiles
+copyFirstCommit
+removeShootoutTests
 
 exit 0
 
