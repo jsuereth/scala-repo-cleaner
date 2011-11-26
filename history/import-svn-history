@@ -1,0 +1,92 @@
+#!/usr/bin/env scalas
+!#
+/***
+scalaVersion := "2.9.1"
+
+scalacOptions in Compile += "-deprecation"
+
+*/
+
+import scala.sys.process._
+import java.io.File
+import util.parsing.combinator._
+import util.control.Exception.catching
+case class CommitInfo(revision: Int, author: String, date: String)
+case class CommitMessage(msg: String, info: CommitInfo)
+
+
+
+val svndir = new File("/home/josh/projects/typesafe/svn/scala-svn")
+val gitdir = new File("/home/josh/projects/typesafe/scala-git-for-paul")
+val svnauthorsfile = new File("/home/josh/projects/typesafe/scala-repo-cleaner/svn-authors.txt")
+
+lazy val svnauthors: Map[String,String] = {
+  object AuthorsFileParser extends RegexParsers {
+    val svnauthor = "[^=]*".r ^^ { case x => x.trim } 
+    val githubauthor = ".*<.*>".r
+    val line = (svnauthor <~ "=") ~ githubauthor ^^ { case x ~ y => x -> y }
+    val authorsfile = rep(line) ^^ { case seq => seq.toMap }
+    def parseAuthors(file: File): Map[String,String] = parse(authorsfile, new java.io.FileReader(file)) match {
+      case Success(authors, _) => authors
+      case Failure(msg,next) => sys.error("at line " + next.pos.line + " column " + next.pos.column +":" +  msg)
+      case Error(msg,next) => sys.error("at line " + next.pos.line + " column " + next.pos.column +":"+ msg)
+    }
+  }
+  AuthorsFileParser parseAuthors svnauthorsfile
+}
+
+object SvnLogFileParser extends RegexParsers {
+  val line: Parser[String] = "------------------------------------------------------------------------"
+  val revision: Parser[Int] = ("r" ~> "\\d+".r) ^^ { case x => x.toInt }
+  val author: Parser[String] = "\\S+".r ^^ { case x =>  svnauthors.getOrElse(x, "Automation Bot <noreply@epfl.ch>") }
+  val datetime: Parser[String] = {
+    val two: Parser[String] = "\\d\\d".r
+    val four: Parser[String] = "\\d\\d\\d\\d".r
+    val date: Parser[String] = four ~ "-" ~ two ~ "-" ~ two ^^ { case year ~ _ ~ month ~ _ ~ day => year+"-"+month+"-"+day }
+    val time: Parser[String] = (two ~ ":" ~ two ~ ":" ~ two) <~ ("-" ~ "\\d+".r) ^^ { case hr ~ _ ~ min ~ _ ~ sec => hr+":"+min+":"+sec }
+    val junk = "(" ~ "[^)]+".r ~ ")"
+    
+    ((date ~ time) <~ junk) ^^ { case date ~ time => date + " " + time }
+  }
+  val linecount: Parser[Int] = ("\\d+".r <~ "line(s?)".r) ^^ { case x => x.toInt }
+  val header: Parser[CommitInfo] = (revision <~ "|") ~ (author <~ "|") ~ (datetime <~ "|") ~ linecount  ^^ {
+    case rev ~ author ~ date ~ linecount => CommitInfo(rev,author,date)
+  }
+  val commitMsg = "([-]?[-]?[^-]+)+".r
+  val commitLog = (line ~> header) ~ (commitMsg <~ line) ^^ { case info ~ msg => CommitMessage(msg, info) }
+
+  def parseCommit(cmsg: String): CommitMessage = parse(commitLog, cmsg) match {
+      case Success(info, _) => info
+      case Failure(msg,next) => sys.error(cmsg + "\n\nat line " + next.pos.line + " column " + next.pos.column +":" +  msg)
+      case Error(msg,next) => sys.error(cmsg + "\n\nat line " + next.pos.line + " column " + next.pos.column +":"+ msg)
+  }
+}
+
+def GetCommitMessage(revision: Int): CommitMessage =
+  SvnLogFileParser parseCommit Process("svn log -r "+ revision, Some(svndir)).!!
+
+
+def ApplyDiff(revision: Int): Unit = {
+  val tmpfile = new File("/tmp/"+revision + ".patch")
+  (Process("svn diff -r " + (revision-1) + ":" + (revision+0), Some(svndir)) #> tmpfile).!
+  Process("patch -p0 -i " + tmpfile.getAbsolutePath, Some(gitdir)).!
+}
+
+def Commit(msg: CommitMessage): Unit =
+  Process(Seq("git", "commit", "-a", "-m", msg.msg, "--author", msg.info.author, "--date", msg.info.date), Some(gitdir)).!
+
+def MigrateDiff(revision: Int) = {
+  println("Migrating r" + revision + "...")
+  ApplyDiff(revision)
+  Commit(GetCommitMessage(revision))
+}
+
+//Console println GetCommitMessage(25929)
+//Commit(GetCommitMessage(25929))
+
+val commits = (for {
+  rnum <- (Process("svn log", Some(svndir)) #| Process(Seq("grep","-e","|.*|")) #| Process(Seq("awk", "{ print $1 }"))).lines
+  num <- catching(classOf[NumberFormatException]) opt (rnum.drop(1).toInt)
+} yield num).sorted dropWhile (_ != 25930)
+
+commits foreach MigrateDiff
