@@ -54,7 +54,7 @@ pushJarFile() {
   local jar_name=${jar#$jar_dir/}
   pushd $jar_dir >/dev/null
   local jar_sha1=$(shasum -p $jar_name)
-  local version=${jar_sha1%  ?$jar_name}
+  local version=${jar_sha1% ?$jar_name}
   local remote_uri=${version}${jar#$basedir}
   echo "  Pushing to ${remote_urlbase}/${remote_uri} ..."
   echo "	$curl"
