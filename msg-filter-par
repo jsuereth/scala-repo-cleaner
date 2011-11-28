@@ -34,11 +34,13 @@ matches () {
 }
 # Signs of code or other formatting:
 # curlies, method signatures, 'x = y'
+# bullet points
 # and --- means a pretty graph
 declare -a codeRegexes=(
   '.*[{}]+.*'
   '.*[[:space:]]def[[:space:]].*'
   '.*[[:space:]]=[[:space:]].*'
+  '[[:space:]]+\*[[:space:]]+.*'
   '.*---.*'
 )
 
@@ -105,11 +107,20 @@ readInput () {
         if [[ ${#line} -le $maxSubject ]]; then
           subject="$line"
           currentLine=""
-        # otherwise truncate it to max width and keep it as part
-        # of the message body.  (This is the situation when people
-        # write commit messages without separate subjects.)
         else
-          subject="${line:0:$maxSubjectTrunc}..."
+          sentence=${line%%. *}
+          len=${#sentence}
+          # Or maybe there's a period in there.
+          if (( $len < $maxSubject )); then
+            (( len += 2 ))
+            subject="${sentence}."
+            currentLine=${sentence:$len}
+          # otherwise truncate it to max width and keep it as part
+          # of the message body.  (This is the situation when people
+          # write commit messages without separate subjects.)
+          else
+            subject="${line:0:$maxSubjectTrunc}..."
+          fi
         fi
       fi
     fi
