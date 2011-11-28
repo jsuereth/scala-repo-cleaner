@@ -65,3 +65,7 @@ manojo = manojo <manojo@epfl.ch>
 hosekp = hosekp <hosekp@epfl.ch>
 Mirco = Micro Dotta <mirco.dotta@gmail.com>
 skyluc = skyluc <skyluc@epfl.ch>
+amin = amin <amin@epfl.ch>
+szeiger = Stefan Zeiger <szeiger@novocode.com>
+vogt = vogt <vogt@epfl.ch>
+burmako = Eugene Burmako <burmako@epfl.ch>
