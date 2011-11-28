@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # TODO - Declare this is not on environment.
-if [[ "$tmpjardir" == ""]]; then
+if [[ "$tmpjardir" == "" ]]; then
   tmpjardir="/home/josh/tmp/"
 fi
 

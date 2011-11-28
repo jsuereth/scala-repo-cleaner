@@ -3,7 +3,7 @@
 # Library to push and pull binary artifacts from a remote repository using CURL.
 
 # TODO - Set this if not on the environment.
-if [[ "$tmpjardir" == ""]]; then
+if [[ "$tmpjardir" == "" ]]; then
   tmpjardir="/tmp/"
 fi
 
