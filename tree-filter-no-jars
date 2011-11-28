@@ -1,10 +1,16 @@
 #!/bin/bash
 
+# TODO - Declare this is not on environment.
+if [[ "$tmpjardir" == ""]]; then
+  tmpjardir="/home/josh/tmp/"
+fi
+
 . $(dirname $0)/binary-repo-lib.sh
 
 #modfiles=$(git diff-tree -r --name-status $GIT_COMMIT | awk '$1 != "D" { print $2 }')
 user=user
 password=password
+
 
 printInfo() {
   echo ""
@@ -58,6 +64,9 @@ copyFirstCommit() {
 removeShootoutTests() {
   if [[ -f build.xml ]]; then
     sed '/<shootouttests.*/d' -i build.xml
+  fi
+  if [[ -d test/files/shootout/ ]]; then
+    rm -rf test/files/shootout
   fi
 }
 

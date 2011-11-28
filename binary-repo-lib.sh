@@ -2,44 +2,27 @@
 #
 # Library to push and pull binary artifacts from a remote repository using CURL.
 
+# TODO - Set this if not on the environment.
+if [[ "$tmpjardir" == ""]]; then
+  tmpjardir="/tmp/"
+fi
 
 remote_urlbase="http://typesafe.artifactoryonline.com/typesafe/starr-releases/org/scala-lang/bootstrap"
 libraryJar="$(pwd)/lib/scala-library.jar"
 desired_ext=".desired.sha1"
 
-# Checks whether or not curl is installed and issues a warning on failure.
-checkCurl() {
- if ! which curl >/dev/null; then
-    cat <<EOM
-No means of downloading or uploading binary artifacts found.   
-
-Please install curl for your OS.  e.g.
-* sudo apt-get install curl
-* brew install curl
-EOM
-  fi
-}
-
-# Executes the `curl` command to publish artifacts into a maven/ivy repository.
+# Moves the jar file into a temp repository for later upload.
 # Arugment 1 - The location to publish the file.
 # Argument 2 - The file to publish.
 # Argument 3 - The user to publish as.
 # Argument 4 - The password for the user.
 curlUpload() {
-  checkCurl
   local remote_location=$1
   local data=$2
   local user=$3
   local password=$4
-  mkdir -p $(dirname ~/tmp/bin-repo/$remote_location)
-  cp $data ~/tmp/bin-repo/$remote_location
-#  local url="${remote_urlbase}/${remote_location}"
-#  http_code=$(curl --data-binary "@${data}" --digest --user "${user}:${password}" "$url")
-#  if (( $? != 0 )); then
-#    echo "Error uploading $data to $url: response code $http_code"
-#    echo "$url"
-#    exit 1
-#  fi
+  mkdir -p $(dirname $tmpjardir/bin-repo/$remote_location)
+  cp $data $tmpjardir/bin-repo/$remote_location
 }
 
 # Executes the `curl` command to download a file.
@@ -119,36 +102,6 @@ pushJarFiles() {
     fi
   done
   echo "Binary changes have been pushed.  You may now submit the new *${desired_ext} files to git."
-}
-
-# Pulls a single binary artifact from a remote repository.
-# Argument 1 - The jar file that needs to be downloaded.
-# Argument 2 - The root directory of the project.
-pullJarFile() {
-  local jar=$1
-  local basedir=$2
-  local sha1=$(cat ${jar}${desired_ext})
-  local jar_dir=$(dirname $jar)
-  local jar_name=${jar#$jar_dir/}
-  local version=${sha1%  $jar_name}
-  local remote_uri=${version}/${jar#$basedir/}
-  echo "Downloading from ${remote_urlbase}/${remote_uri}"
-  curlDownload $jar ${remote_urlbase}/${remote_uri}
-}
-
-# Pulls binary artifacts from the remote repository.
-# Argument 1 - The directory to search for *.desired.sha1 files that need to be retrieved.
-pullJarFiles() {
-  local basedir=$1
-  local desiredFiles=$(find ${basedir} -name "*${desired_ext}")
-  for sha in $desiredFiles; do
-    jar=${sha%$desired_ext}
-    local valid=$(isJarFileValid $jar)
-    if [[ "$valid" != "OK" ]]; then
-      echo "Obtaining [$jar] from binary repository..."
-      pullJarFile $jar $basedir
-    fi
-  done
 }
 
 
