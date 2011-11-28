@@ -19,26 +19,11 @@ desired_ext=".desired.sha1"
 curlUpload() {
   local remote_location=$1
   local data=$2
-  local user=$3
-  local password=$4
   mkdir -p $(dirname $tmpjardir/bin-repo/$remote_location)
+  echo "Copying $data to $tmpjardir/bin-repo/$remote_location"
   cp $data $tmpjardir/bin-repo/$remote_location
 }
 
-# Executes the `curl` command to download a file.
-# Argument 1 - The location to store the file.
-# Argument 2 - The URL to download.
-curlDownload() {
-  checkCurl
-  local jar=$1
-  local url=$2
-  http_code=$(curl --write-out '%{http_code}' --silent --fail --output "$jar" "$url")
-  if (( $? != 0 )); then
-    echo "Error downloading $jar: response code $http_code"
-    echo "$url"
-    exit 1
-  fi
-}
 
 # Pushes a local JAR file to the remote repository and updates the .desired.sha1 file.
 # Argument 1 - The JAR file to update.
@@ -48,20 +33,14 @@ curlDownload() {
 pushJarFile() {
   local jar=$1
   local basedir=$2
-  local user=$3
-  local pw=$4
   local jar_dir=$(dirname $jar)
   local jar_name=${jar#$jar_dir/}
   pushd $jar_dir >/dev/null
   local jar_sha1=$(shasum -p $jar_name)
   local version=${jar_sha1% ?$jar_name}
   local remote_uri=${version}${jar#$basedir}
-  echo "  Pushing to ${remote_urlbase}/${remote_uri} ..."
-  echo "	$curl"
-  local curl=$(curlUpload $remote_uri $jar_name $user $pw)
-  echo "  Making new sha1 file ...."
+  curlUpload $remote_uri $jar_name
   echo "$jar_sha1" > "${jar_name}${desired_ext}"
-  echo "  Deleting ${jar} from repo for commit."
   popd >/dev/null
   # TODO - Git remove jar and git add jar.desired.sha1
   # rm $jar
@@ -97,8 +76,7 @@ pushJarFiles() {
   for jar in $jarFiles; do
     local valid=$(isJarFileValid $jar)
     if [[ "$valid" != "OK" ]]; then
-      echo "$jar has changed, pushing changes...."
-      pushJarFile $jar $basedir $user $password
+      pushJarFile $jar $basedir
     fi
   done
   echo "Binary changes have been pushed.  You may now submit the new *${desired_ext} files to git."

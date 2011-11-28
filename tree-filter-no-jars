@@ -2,7 +2,7 @@
 
 # TODO - Declare this is not on environment.
 if [[ "$tmpjardir" == "" ]]; then
-  tmpjardir="/home/josh/tmp/"
+  tmpjardir="/home/josh/tmp/tmp2/"
 fi
 
 . $(dirname $0)/binary-repo-lib.sh
