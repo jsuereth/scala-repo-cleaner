@@ -4,6 +4,9 @@
 
 set -e
 
+originaltags=$(git tag)
+tagrefs=$(for t in $originaltags; do echo :refs/tags/$t ; done)
+
 renameTag () {
   git tag -f $2 $1
   git tag -d $1
@@ -37,3 +40,6 @@ done
 renameTag release-1_0_0-b5 1.0.0.b5
 renameTag release-1_0_0-b6 1.0.0.b6
 renameTag release-1_1_0-b0 1.1.0.b0
+
+echo "# Run this to delete the original tags from the remote."
+echo git push origin $tagrefs
