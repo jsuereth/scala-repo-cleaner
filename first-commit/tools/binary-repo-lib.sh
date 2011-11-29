@@ -48,9 +48,12 @@ curlDownload() {
   checkCurl
   local jar=$1
   local url=$2
+  if [[ "$(uname -o)" == "Cygwin" ]]; then
+    jar=$(cygpath -m $1)
+  fi
   http_code=$(curl --write-out '%{http_code}' --silent --fail --output "$jar" "$url")
   if (( $? != 0 )); then
-    echo "Error downloading $jar: response code $http_code"
+    echo "Error downloading $jar: response code: $http_code"
     echo "$url"
     exit 1
   fi
