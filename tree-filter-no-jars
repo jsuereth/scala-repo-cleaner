@@ -70,11 +70,18 @@ removeShootoutTests() {
   fi
 }
 
+removeAndroidFiles() {
+  if [[ -d docs/android-examples ]]; then
+    rm -rf docs/android-examples
+  fi
+}
+
 
 fixWhitespaceFiles
 removeJarFiles
 copyFirstCommit
 removeShootoutTests
+removeAndroidFiles
 
 exit 0
 
